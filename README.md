@@ -3,7 +3,7 @@
 
 ## Installation
 
-### Step 1 - Install and run neo4j
+### step 1 - Install and run neo4j
 
 The following will download and install neo4j:
 
