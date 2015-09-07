@@ -3,3 +3,4 @@ config/
 logs/
 neo4j*
 *.log
+build/
