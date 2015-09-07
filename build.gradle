@@ -1,0 +1,88 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'groovy'
+apply plugin:'application'
+
+version="1.0.0-SNAPSHOT"
+group="com.example"
+mainClassName = 'io.macgyver.core.ServerMain'
+
+repositories {
+
+ 	mavenLocal()
+    mavenCentral()
+	jcenter()
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.6'
+}
+
+
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+
+
+    compile "io.macgyver:macgyver-core:${MACGYVER_VERSION}"
+
+}
+
+
+
+task installNeo4j() << {
+
+installAndStartNeo4jIfNecessary()
+
+}
+def installAndStartNeo4jIfNecessary() {
+
+	def neo4jName="neo4j-community-2.2.5"
+	def tarball="./neo4j-community-2.2.5-unix.tar.gz"
+	if (!new File(tarball).exists()) {
+
+		println ("downloading neo4j...this could take a minute or two...")
+		project.ant.get(dest: "${tarball}.temp",
+							src: "http://neo4j.com/artifact.php?name=neo4j-community-2.2.5-unix.tar.gz",
+							verbose: true)
+		
+		project.ant.move(file: "${tarball}.temp", tofile: "${tarball}")
+		
+	}
+	
+	println "untarring neo4j..."
+	project.ant.untar( src: "${tarball}", dest:".", compression:"gzip")
+	
+	def serverPropertiesFile = new File("./"+neo4jName+"/conf/neo4j-server.properties")
+	def serverPropertiesText = serverPropertiesFile.text
+	serverPropertiesFile.withWriter { it << serverPropertiesText.replace("dbms.security.auth_enabled=true","dbms.security.auth_enabled=false")}
+	
+	println "starting neo4j..."
+	project.ant.chmod (dir:"${neo4jName}/bin" ,perm:"ugo+x", includes:"**/*")
+	
+	project.ant.exec( executable:"${neo4jName}/bin/neo4j", failonerror:true, output:"install.log" )  {
+		arg( value: "stop" )
+	}
+	project.ant.exec( executable:"${neo4jName}/bin/neo4j", failonerror:true, output:"install.log" )  {
+		arg( value: "start" )
+	}
+	
+	println (new File("install.log").text)
+	
+	
+	println ""
+	println "When you want to shut it down, run: ./${neo4jName}/bin/neo4j stop"
+	println ""
+	
+	println "To run MacGyver:"
+	println ""
+	println "./gradlew run"
+}
+
+
+
+

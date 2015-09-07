@@ -1,0 +1,5 @@
+.gradle/
+config/
+logs/
+neo4j*
+*.log
